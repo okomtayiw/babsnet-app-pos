@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox spacing="12" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.UnitProductController" alignment="TOP_CENTER" style="-fx-padding: 18;">
+    <Label text="Unit List" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <VBox spacing="6">
+            <Label text="Name:"/>
+            <TextField fx:id="nameField" promptText="Unit Name" prefWidth="150"/>
+        </VBox>
+        <VBox spacing="6">
+            <Label text="Abbreviation:"/>
+            <TextField fx:id="abbrField" promptText="e.g. Pcs" prefWidth="110"/>
+        </VBox>
+        <VBox spacing="6" alignment="CENTER_LEFT">
+            <HBox spacing="8">
+                <Button fx:id="addBtn" text="Add" style="-fx-background-color:#43a047;-fx-text-fill:white;font-weight:bold" onAction="#handleAdd"/>
+                <Button fx:id="updateBtn" text="Update" style="-fx-background-color:#0288d1;-fx-text-fill:white;font-weight:bold" onAction="#handleUpdate"/>
+                <Button fx:id="deleteBtn" text="Delete" style="-fx-background-color:#d32f2f;-fx-text-fill:white;font-weight:bold" onAction="#handleDelete"/>
+            </HBox>
+            <Button fx:id="clearBtn" text="Clear" minWidth="154" onAction="#handleClear"/>
+        </VBox>
+    </HBox>
+    <TableView fx:id="tableUnit" prefHeight="320">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="45" />
+            <TableColumn fx:id="colName" text="Name" prefWidth="130"/>
+            <TableColumn fx:id="colAbbr" text="Abbreviation" prefWidth="110"/>
+        </columns>
+    </TableView>
+</VBox>

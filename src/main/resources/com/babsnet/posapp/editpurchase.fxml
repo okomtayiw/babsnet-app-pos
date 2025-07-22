@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.EditPurchaseController"
+      fx:id="rootVBoxEditPurchase"
+      spacing="20" alignment="TOP_CENTER"
+      style="-fx-padding: 20px;">
+
+    <Label text="Edit Purchase" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+    <HBox spacing="10">
+        <ComboBox fx:id="supplierComboBox" promptText="Select Supplier" prefWidth="200"/>
+        <TextField fx:id="invoiceField" promptText="Invoice Number" />
+        <DatePicker fx:id="purchaseDatePicker" />
+    </HBox>
+
+    <HBox spacing="10">
+        <TextField fx:id="barcodeField" promptText="Scan barcode / input product name" />
+        <TextField fx:id="buyPriceField" promptText="Buy Price" />
+        <TextField fx:id="quantityField" promptText="Quantity" />
+        <Button text="Add Product" fx:id="addButton" onAction="#addProductToPurchase" />
+        <Button text="Update Product" fx:id="updateButton" onAction="#updateSelectedProduct" disable="true" />
+        <Button text="Delete Product" fx:id="deleteButton" onAction="#deleteSelectedProduct" disable="true" />
+        <Button text="Clear" fx:id="clearButton" onAction="#clearSelectedProduct" disable="true" />
+
+    </HBox>
+
+    <TableView fx:id="purchaseTable">
+        <columns>
+            <TableColumn fx:id="colID" text="No" prefWidth="200" />
+            <TableColumn fx:id="colName" text="Product Name" prefWidth="200" />
+            <TableColumn fx:id="colQty" text="Qty" prefWidth="80" />
+            <TableColumn fx:id="colBuyPrice" text="Buy Price" prefWidth="100" />
+            <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="120" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <Button text="Save Changes" fx:id="saveChangesButton" onAction="#saveChanges" />
+        <Button text="Cancel" onAction="#cancel" />
+    </HBox>
+
+</VBox>

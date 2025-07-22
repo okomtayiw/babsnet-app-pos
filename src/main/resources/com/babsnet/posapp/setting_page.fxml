@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="14" alignment="TOP_LEFT" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.SettingController"
+      style="-fx-padding: 24;">
+    <Label text="Pengaturan Database and Printer" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+    <Separator/>
+
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="DB URL" minWidth="70"/>
+        <TextField fx:id="dbUrlField" prefWidth="330" editable="false"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="DB User" minWidth="70"/>
+        <TextField fx:id="dbUserField" prefWidth="140" editable="false"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Button fx:id="testDbButton" text="Test Koneksi DB" onAction="#handleTestDb"/>
+        <Label fx:id="dbStatusLabel" text="Unknown" style="-fx-font-weight: bold;"/>
+    </HBox>
+
+    <Separator/>
+
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Label text="Printer" minWidth="70"/>
+        <ComboBox fx:id="printerComboBox" prefWidth="230"/>
+    </HBox>
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Button fx:id="testPrinterButton" text="Test Printer" onAction="#handleTestPrinter"/>
+        <Label fx:id="printerStatusLabel" text="Unknown" style="-fx-font-weight: bold;"/>
+    </HBox>
+</VBox>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.babsnet.posapp.controller.PurchaseReportController"
+            prefWidth="1100" prefHeight="600">
+
+    <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" AnchorPane.bottomAnchor="10">
+        <!-- Filter Bar -->
+        <HBox spacing="8">
+            <Label text="Dari Tanggal:" />
+            <DatePicker fx:id="startDatePicker" />
+            <Label text="s/d" />
+            <DatePicker fx:id="endDatePicker" />
+            <Button text="Filter" onAction="#handleFilter"/>
+            <Button text="Export PDF" fx:id="exportPdfButton" onAction="#handleExportDetailPdf"/>
+        </HBox>
+
+        <!-- TableView Data -->
+        <TableView fx:id="detailTable" prefHeight="500">
+            <columns>
+                <TableColumn fx:id="colNo" text="No." prefWidth="45"/>
+                <TableColumn fx:id="colDate" text="Tanggal" prefWidth="100"/>
+                <TableColumn fx:id="colNumber" text="No. Pembelian" prefWidth="130"/>
+                <TableColumn fx:id="colProduct" text="Nama Produk" prefWidth="170"/>
+                <TableColumn fx:id="colQty" text="Qty" prefWidth="60"/>
+                <TableColumn fx:id="colBuyPrice" text="Harga Beli" prefWidth="110"/>
+                <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="110"/>
+                <TableColumn fx:id="colSupplier" text="Supplier" prefWidth="140"/>
+                <TableColumn fx:id="colUser" text="User" prefWidth="90"/>
+            </columns>
+        </TableView>
+
+        <!-- Total -->
+        <HBox spacing="12" alignment="CENTER_RIGHT">
+            <Label text="Total Pembelian:" style="-fx-font-weight: bold;" />
+            <Label fx:id="totalSubtotalLabel" text="Rp0"/>
+        </HBox>
+    </VBox>
+</AnchorPane>

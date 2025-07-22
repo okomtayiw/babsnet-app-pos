@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox spacing="12" alignment="TOP_CENTER" xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.ProductTypeController">
+    <Label text="Master Jenis Produk" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Nama Tipe:"/>
+        <TextField fx:id="typeNameField" prefWidth="220"/>
+        <Button text="Add" fx:id="addBtn" onAction="#handleAdd"/>
+        <Button text="Update" fx:id="updateBtn" onAction="#handleUpdate"/>
+        <Button text="Delete" fx:id="deleteBtn" onAction="#handleDelete"/>
+        <Button text="Clear" fx:id="clearBtn" onAction="#handleClear"/>
+    </HBox>
+    <TableView fx:id="tableType" prefHeight="300" prefWidth="450">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="40"/>
+            <TableColumn fx:id="colTypeName" text="Nama Tipe" prefWidth="220"/>
+        </columns>
+    </TableView>
+</VBox>

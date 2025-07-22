@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.StockAdjustmentController"
+      spacing="15" alignment="TOP_CENTER"
+      fx:id="rootBoxAdjustment"
+      style="-fx-padding: 24px 18px; -fx-background-color: #f7f7fa;">
+
+    <Label text="Stock Adjustment"
+           style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #324468;"/>
+
+    <!-- Barcode & Product Info -->
+    <HBox spacing="10">
+        <TextField fx:id="barcodeField" promptText="Scan/Input Product Barcode" prefWidth="220"/>
+        <TextField fx:id="productNameField" promptText="Product Name" prefWidth="230" editable="false"
+                   style="-fx-opacity: 0.85; -fx-background-color: #e9ecef;"/>
+        <Label fx:id="stockInfoLabel" text="" style="-fx-text-fill:#888; -fx-font-size:12px;"/>
+        <Button text="🔍" onAction="#onFindProduct" style="-fx-background-radius: 8;"/>
+    </HBox>
+
+    <!-- Reason, Quantity, Notes -->
+    <HBox spacing="10">
+        <ComboBox fx:id="reasonComboBox" promptText="Adjustment Reason" prefWidth="180">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="REJECTED" />
+                    <String fx:value="EXPIRED" />
+                    <String fx:value="DAMAGED" />
+                    <String fx:value="LOST" />
+                    <String fx:value="RETURN" />
+                    <String fx:value="CORRECTION" />
+                </FXCollections>
+            </items>
+        </ComboBox>
+        <TextField fx:id="quantityField" promptText="Quantity" prefWidth="110"/>
+        <TextArea fx:id="noteArea" promptText="Notes (optional)" prefWidth="210" prefHeight="40" wrapText="true"
+                  style="-fx-font-size: 12px;"/>
+    </HBox>
+
+    <!-- Buttons -->
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="Adjust Stock" fx:id="adjustButton" onAction="#adjustStock"
+                style="-fx-background-color: #34996b; -fx-text-fill: white; -fx-font-weight: bold;"/>
+        <Button text="Save Edit" fx:id="adjustEditButton" onAction="#adjustEditStock"
+                style="-fx-background-color: #e6b800; -fx-text-fill: #222; -fx-font-weight: bold;" disable="true"/>
+        <Button text="Clear" onAction="#clearForm" />
+    </HBox>
+
+    <!-- TableView: Adjustment History + Action -->
+    <TableView fx:id="adjustmentTable" prefHeight="260" style="-fx-font-size: 13px;">
+        <columns>
+            <TableColumn fx:id="colID" text="No" prefWidth="180"/>
+            <TableColumn fx:id="colProduct" text="Product Name" prefWidth="180"/>
+            <TableColumn fx:id="colType" text="Type" prefWidth="90"/>
+            <TableColumn fx:id="colQty" text="Qty" prefWidth="60" />
+            <TableColumn fx:id="colNote" text="Notes" prefWidth="130"/>
+            <TableColumn fx:id="colDate" text="Date" prefWidth="120"/>
+            <TableColumn fx:id="colAction" text="Action" prefWidth="110"/>
+        </columns>
+    </TableView>
+
+</VBox>

@@ -1,0 +1,43 @@
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.TransactionHistoryController"
+      fx:id="rootBoxHistory"
+      spacing="15" alignment="TOP_CENTER" style="-fx-padding: 30;">
+    <Label text="Transaction List" style="-fx-font-size: 18px;"/>
+    <Label text="Cari Transaksi:" style="-fx-font-size: 13px;"/>
+    <HBox spacing="8" alignment="CENTER_LEFT" style="-fx-padding: 0 0 10 0;">
+        <TextField fx:id="searchField" promptText="Cari berdasarkan nomor transaksi..." />
+        <Button text="Info" onAction="#showShortcutInfo"
+                style="-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 14px;"/>
+        <Button fx:id="refreshButton" text="Refresh" onAction="#refreshTransactions"/>
+    </HBox>
+
+    <TableView fx:id="transactionTable" prefHeight="220">
+        <columns>
+            <TableColumn fx:id="colID" text="No" prefWidth="50"/>
+            <TableColumn fx:id="colNumber" text="Number" prefWidth="100"/>
+            <TableColumn fx:id="colDate" text="Date" prefWidth="140"/>
+            <TableColumn fx:id="colTotal" text="Total" prefWidth="120"/>
+            <TableColumn fx:id="colStatus" text="Status" prefWidth="100"/>
+            <TableColumn fx:id="colAction" text="Action" prefWidth="140"/>
+        </columns>
+    </TableView>
+    <Label text="Transaction Details" style="-fx-font-size: 15px;"/>
+    <TableView fx:id="transactionDetailTable" prefHeight="200">
+        <columns>
+            <TableColumn fx:id="colIDDetail" text="No" prefWidth="50"/>
+            <TableColumn fx:id="colProductName" text="Product" prefWidth="180"/>
+            <TableColumn fx:id="colQty" text="Qty" prefWidth="60"/>
+            <TableColumn fx:id="colPrice" text="Price" prefWidth="90"/>
+            <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="110"/>
+            <TableColumn fx:id="colDetailAction" text="Edit" prefWidth="140"/>
+        </columns>
+    </TableView>
+</VBox>

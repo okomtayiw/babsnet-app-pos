@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ComboBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.ProductController"
+      fx:id="rootVBoxProduct"
+      spacing="20" alignment="CENTER" style="-fx-padding: 20px; -fx-background-color: #f8f9fa;">
+
+    <Label text="Stock Product List" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #333333;" />
+
+    <!-- Form Add/Edit -->
+    <VBox spacing="10" style="-fx-padding: 15px; -fx-background-color: #ffffff; -fx-border-color: #cccccc; -fx-border-radius: 5px; -fx-background-radius: 5px;">
+        <HBox spacing="10">
+            <TextField fx:id="barcodeField" promptText="Barcode ID" />
+            <TextField fx:id="nameField" promptText="Product name" />
+            <ComboBox fx:id="typeComboBox" promptText="Select Type" />
+            <Button text="+ Add Type" onAction="#showAddProductTypeDialog" style="-fx-background-color: #6c757d; -fx-text-fill: white;" />
+            <Button text="Info" onAction="#showShortcutInfo" style="-fx-background-color: #6c757d; -fx-text-fill: white;"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <TextField fx:id="stockField" promptText="Stock"  editable="true" />
+            <TextField fx:id="priceField" promptText="Price" />
+            <ComboBox fx:id="unitComboBox" promptText="Select Unit" />
+            <Button text="+ Add Unit" onAction="#showAddUnitDialog" style="-fx-background-color: #6c757d; -fx-text-fill: white;" />
+        </HBox>
+
+        <HBox spacing="10">
+            <Button text="Add" onAction="#addProduct" style="-fx-background-color: #28a745; -fx-text-fill: white;" />
+            <Button text="Update" onAction="#updateProduct" style="-fx-background-color: #ffc107; -fx-text-fill: black;" />
+            <Button text="Clear" onAction="#clearForm" style="-fx-background-color: #17a2b8; -fx-text-fill: white;" />
+            <Button text="Delete" onAction="#deleteSelectedProduct" style="-fx-background-color: #dc3545; -fx-text-fill: white;" />
+            <Button fx:id="generateBarcodeBtn" text="Generate Barcode" onAction="#handleGenerateBarcode"/>
+
+        </HBox>
+    </VBox>
+
+    <!-- Search Bar -->
+    <HBox spacing="10">
+
+        <TextField fx:id="searchField" promptText="Search product name..." />
+        <Button text="Search" onAction="#searchProduct" />
+        <Button text="Reset" onAction="#resetSearch" />
+        <Button text="Refresh" onAction="#loadProducts" />
+        <Button fx:id="exportPdfBtn" text="Export Barcode to PDF" onAction="#exportBarcodePdf"/>
+
+    </HBox>
+
+    <!-- Table Product -->
+    <TableView fx:id="productTable" prefHeight="400" style="-fx-font-size: 14px;">
+        <columns>
+            <TableColumn fx:id="colSelected" text="Select" prefWidth="50"/>
+            <TableColumn fx:id="colId" text="ID" prefWidth="50" style="-fx-text-fill: black;" />
+            <TableColumn fx:id="colName" text="Product Name" prefWidth="200" style="-fx-text-fill: black;" />
+            <TableColumn fx:id="colBarcode" text="Barcode" prefWidth="150" style="-fx-text-fill: black;" />
+            <TableColumn fx:id="colStock" text="Stock" prefWidth="80" style="-fx-text-fill: black;" />
+            <TableColumn fx:id="colPrice" text="Price" prefWidth="100" style="-fx-text-fill: black;" />
+            <TableColumn fx:id="colType" text="Type" prefWidth="100" style="-fx-text-fill: black;" />
+            <TableColumn fx:id="colUnit" text="Unit" prefWidth="80" style="-fx-text-fill: black;" />
+        </columns>
+    </TableView>
+
+</VBox>

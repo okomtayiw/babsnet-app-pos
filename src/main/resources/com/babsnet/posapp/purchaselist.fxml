@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.PurchaseListController"
+      fx:id="rootPurchaseList"
+      spacing="10" alignment="TOP_CENTER"
+      style="-fx-padding: 20px;">
+
+    <Label text="Purchase Transactions" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+    <!-- Pencarian -->
+    <HBox spacing="10">
+        <TextField fx:id="searchField" promptText="Search by Purchase Number..." prefWidth="250"/>
+        <Button text="Search" onAction="#searchPurchase"/>
+        <Button text="Clear" onAction="#clearSearch"/>
+    </HBox>
+
+    <TableView fx:id="purchaseTable" prefHeight="250">
+        <columns>
+            <TableColumn fx:id="colId" text="ID" prefWidth="50" />
+            <TableColumn fx:id="colNumber" text="Purchase Number" prefWidth="150" />
+            <TableColumn fx:id="colDate" text="Date" prefWidth="120" />
+            <TableColumn fx:id="colSupplier" text="Supplier" prefWidth="150" />
+            <TableColumn fx:id="colTotal" text="Total" prefWidth="100" />
+            <TableColumn fx:id="colStatus" text="Status" prefWidth="100" />
+        </columns>
+    </TableView>
+
+    <Label text="Purchase Details" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+
+    <TableView fx:id="purchaseDetailTable" prefHeight="200">
+        <columns>
+            <TableColumn fx:id="colIdItemDetail" text="ID" prefWidth="50" />
+            <TableColumn fx:id="colProductName" text="Product Name" prefWidth="200" />
+            <TableColumn fx:id="colQty" text="Qty" prefWidth="80" />
+            <TableColumn fx:id="colBuyPrice" text="Buy Price" prefWidth="100" />
+            <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="120" />
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <Button text="Edit Purchase" fx:id="editButton" onAction="#editPurchase" disable="true" />
+        <Button text="Cancel Purchase" fx:id="cancelButton" onAction="#cancelPurchase" disable="true" />
+        <Button text="Refresh" onAction="#refreshPurchaseList" />
+    </HBox>
+
+</VBox>

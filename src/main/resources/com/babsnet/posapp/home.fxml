@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Button?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.babsnet.posapp.controller.HomeController"
+            style="-fx-background-color: #f8f9fa;">
+
+    <!-- Header -->
+    <top>
+        <HBox style="-fx-background-color: #4CAF50; -fx-padding: 15px;">
+            <Label text="Babsnet POS" style="-fx-font-size: 20px; -fx-text-fill: white; -fx-font-weight: bold;" />
+        </HBox>
+    </top>
+
+    <!-- Sidebar -->
+    <left>
+        <VBox spacing="15" style="-fx-background-color: #EEEEEE; -fx-padding: 20px;">
+            <Label text="☰ MENU" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+            <Button text="Home" onAction="#goToHome"/>
+            <Button text="Setting" onAction="#goToSetting"/>
+            <Button fx:id="btnUsers" text="Users" onAction="#goToUsers"/>
+            <Button fx:id="btnSuppliers" text="Supplier" onAction="#goToSuppliers"/>
+            <Button text="Chasier (F1)" onAction="#goToCashier"/>
+            <Button text="Transaction History (F2)" onAction="#goToTransactionHistory"/>
+            <Button text="Product (F3)" onAction="#goToProduct"/>
+            <Button text="Purchase (F4)" onAction="#goToPurchase"/>
+            <Button text="Purchase Transaction (F5)" onAction="#goToPurchaseList"/>
+            <Button text="Adjustment Stock (F6)" onAction="#goToAdjustStock"/>
+            <Button text="Laporan (F7)" onAction="#goToReport"/>
+            <Button text="Laporan Pembelian (F8)" onAction="#goToReportPurchase"/>
+            <Button text="Logout (ESC)" onAction="#logout"
+                    style="-fx-background-color: #e74c3c; -fx-text-fill: white;"/>
+        </VBox>
+    </left>
+
+
+    <center>
+        <StackPane fx:id="contentContainer"/>
+    </center>
+</BorderPane>

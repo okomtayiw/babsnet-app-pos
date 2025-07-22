@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.babsnet.posapp.controller.DashboardController"
+      alignment="CENTER" spacing="20" style="-fx-padding: 40px;">
+    <ImageView fx:id="gifView" fitWidth="400" preserveRatio="true"/>
+    <Text text="Selamat datang di Babsnet POS!" style="-fx-font-size: 22px; -fx-font-weight: bold;" />
+</VBox>
+
+

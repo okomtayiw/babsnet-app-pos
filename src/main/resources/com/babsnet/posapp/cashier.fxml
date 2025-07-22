@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.*?>
+
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<HBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.CashierController"
+      spacing="20" style="-fx-padding: 20px; -fx-background-color: #f8f9fa;">
+
+    <!-- Kiri: Kasir -->
+    <VBox spacing="15" HBox.hgrow="ALWAYS">
+        <Text text="POS - Cashier" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+        <HBox spacing="10">
+            <TextField fx:id="barcodeField"
+                       promptText="Scan barcode / input product name"
+                       onAction="#addProduct"
+                       prefWidth="250"
+                       maxWidth="300"
+                       HBox.hgrow="NEVER"
+                       editable="true" />
+            <Button text="Add" onAction="#addProduct" />
+            <Button text="Info" onAction="#showShortcutInfo" />
+        </HBox>
+
+
+        <TableView fx:id="productTable" editable="true" VBox.vgrow="ALWAYS">
+            <columns>
+                <TableColumn fx:id="colId" text="No." prefWidth="50" />
+                <TableColumn fx:id="colName" text="Product Name" prefWidth="150" />
+                <TableColumn fx:id="colQty" text="Qty" prefWidth="50" />
+                <TableColumn fx:id="colPrice" text="Price" prefWidth="80" />
+                <TableColumn fx:id="colSubtotal" text="Subtotal" prefWidth="100" />
+            </columns>
+        </TableView>
+
+        <HBox spacing="10">
+            <Text text="Total: " style="-fx-font-size: 36px; -fx-font-weight: bold;"/>
+            <Text fx:id="totalText" text="0" style="-fx-font-size: 36px; -fx-font-weight: bold;"/>
+        </HBox>
+
+        <HBox spacing="10">
+            <ComboBox fx:id="paymentMethodComboBox" promptText="Select Payment Method">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="Cash" />
+                        <String fx:value="QRIS" />
+                        <String fx:value="Debit" />
+                        <String fx:value="E-Wallet" />
+                        <String fx:value="Transfer" />
+                    </FXCollections>
+                </items>
+            </ComboBox>
+            <TextField fx:id="paymentField" promptText="Enter payment amount"
+                       prefWidth="250"
+                       maxWidth="300"
+                       HBox.hgrow="NEVER" />
+            <Button text="Pay" onAction="#processPayment" />
+        </HBox>
+    </VBox>
+
+    <!-- Kanan: Preview Nota -->
+    <VBox spacing="10"
+          prefWidth="350" maxWidth="400"
+          style="-fx-background-color: #ffffff; -fx-padding: 15px; -fx-border-color: #cccccc; -fx-border-radius: 5px; -fx-background-radius: 5px;"
+          VBox.vgrow="ALWAYS" HBox.hgrow="NEVER">
+
+        <Label text="Receipt Preview" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
+
+        <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true">
+            <Label fx:id="receiptPreview" style="-fx-font-family: 'Courier New'; -fx-font-size: 12;" wrapText="true" />
+        </ScrollPane>
+
+
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <Button text="Print" onAction="#printReceiptToPrinter" />
+            <Button text="Copy" onAction="#handleCopy" />
+        </HBox>
+    </VBox>
+
+
+
+
+</HBox>
