@@ -17,6 +17,7 @@
             <DatePicker fx:id="endDatePicker" />
             <Button text="Filter" onAction="#handleFilter"/>
             <Button text="Export PDF" fx:id="exportPdfButton" onAction="#handleExportDetailPdf"/>
+            <Button text="Export PDF" fx:id="exportCsvButton" onAction="#handleExportDetailCsv"/>
         </HBox>
 
         <!-- TableView Data -->

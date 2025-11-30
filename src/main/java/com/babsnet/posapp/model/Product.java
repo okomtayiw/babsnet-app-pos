@@ -9,16 +9,18 @@ public class Product {
     private String name;
     private int stock;
     private double price;
+    private double lastBuyPrice;
     private double discount;
     private String typeName;
     private String barcode;
     private String unitName;
 
-    public Product(int id, String name, int stock, double price, double discount, String typeName, String barcode) {
+    public Product(int id, String name, int stock, double price,double lastBuyPrice, double discount, String typeName, String barcode) {
         this.id = id;
         this.name = name;
         this.stock = stock;
         this.price = price;
+        this.lastBuyPrice = lastBuyPrice;
         this.discount = discount;
         this.typeName = typeName;
         this.barcode = barcode;
@@ -53,6 +55,14 @@ public class Product {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public double getLastBuyPrice() {
+        return lastBuyPrice;
+    }
+
+    public void setLastBuyPrice(double lastBuyPrice) {
+        this.lastBuyPrice = lastBuyPrice;
     }
 
     public void setDiscount(double discount) {

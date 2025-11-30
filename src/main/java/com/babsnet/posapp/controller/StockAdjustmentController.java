@@ -6,6 +6,8 @@ import com.babsnet.posapp.model.StockAdjustment;
 import com.babsnet.posapp.model.User;
 import com.babsnet.posapp.repository.ProductRepository;
 import com.babsnet.posapp.session.SessionManager;
+import com.babsnet.posapp.util.FormatUtil;
+import com.babsnet.posapp.util.ProductPickerDialog;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -13,6 +15,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -380,7 +384,40 @@ public class StockAdjustmentController {
         }
         // Show shortcut info
         else if (event.isControlDown() && code == javafx.scene.input.KeyCode.I) {
-            showShortcutInfo(); event.consume();
+            showShortcutInfo();
+            event.consume();
+        }
+
+        else if (event.isControlDown() && code == KeyCode.P) {
+            openProductSearch();
+            event.consume();
+        }
+    }
+
+    @FXML
+    private void openProductSearch() {
+        try {
+            var owner = adjustmentTable.getScene() != null ? adjustmentTable.getScene().getWindow() : null;
+            ProductPickerDialog.showAndPick(owner).ifPresent(prod -> {
+                ClipboardContent cc = new ClipboardContent();
+                cc.putString(prod.getBarcode() == null ? "" : prod.getBarcode());
+                Clipboard.getSystemClipboard().setContent(cc);
+
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setHeaderText("Produk terpilih");
+                info.setContentText(
+                        "Nama   : " + prod.getName() + "\n" +
+                                "Barcode: " + prod.getBarcode() + "\n" +
+                                "Harga Jual  : " + FormatUtil.toRupiahNoDecimal(prod.getPrice())
+                );
+                info.showAndWait();
+                barcodeField.setText(prod.getBarcode());
+
+
+            });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Gagal membuka popup produk: " + ex.getMessage()).showAndWait();
         }
     }
 

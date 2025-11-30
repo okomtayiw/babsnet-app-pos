@@ -15,6 +15,17 @@ import java.util.List;
 
 public class PurchaseDAO {
 
+    public static Integer getPurchaseIdByNumber(String purchaseNumber) throws Exception {
+        String sql = "SELECT id FROM purchases WHERE purchase_number = ? LIMIT 1";
+        try (Connection conn = DatabaseHelper.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, purchaseNumber.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getInt("id") : null;
+            }
+        }
+    }
+
     public static int insertPurchase(String purchaseNumber, LocalDate purchaseDate, int supplierId, double total, User user) throws Exception {
         String sql = "INSERT INTO purchases (purchase_number, purchase_date, supplier_id, total, user_id) VALUES (?, ?, ?, ?, ?)";
 
@@ -55,6 +66,7 @@ public class PurchaseDAO {
                 pstmt.addBatch();
 
                 ProductRepository.addStock(conn,item.getProduct().getId(), item.getQuantity());
+                ProductRepository.updateLastBuyPrice(conn, item.getProduct().getId(),item.getBuyPrice());
             }
             pstmt.executeBatch();
         }
@@ -211,6 +223,7 @@ public class PurchaseDAO {
                     insertStmt.addBatch();
 
                     ProductRepository.addStock(conn, item.getProduct().getId(), item.getQuantity());
+                    ProductRepository.updateLastBuyPrice(conn, item.getProduct().getId(),item.getProduct().getLastBuyPrice());
                 }
                 insertStmt.executeBatch();
             }

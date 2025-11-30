@@ -10,6 +10,7 @@ import com.babsnet.posapp.repository.SupplierRepository;
 import com.babsnet.posapp.util.FocusablePage;
 import com.babsnet.posapp.util.FormatUtil;
 import com.babsnet.posapp.util.MessageDialogUtil;
+import com.babsnet.posapp.util.ProductPickerDialog;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -20,6 +21,8 @@ import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
@@ -203,7 +206,13 @@ public class EditPurchaseController implements FocusablePage {
             }
         }
         else if (event.isControlDown() && code == KeyCode.I) {
-            showShortcutInfo(); event.consume();
+            showShortcutInfo();
+            event.consume();
+        }
+
+        if (event.isControlDown() && event.getCode() == KeyCode.P) {
+            openProductSearch();
+            event.consume();
         }
     }
 
@@ -364,5 +373,32 @@ public class EditPurchaseController implements FocusablePage {
     @Override
     public void focusRootBox() {
         Platform.runLater(() -> rootVBoxEditPurchase.requestFocus());
+    }
+
+    @FXML
+    private void openProductSearch() {
+        try {
+            var owner = purchaseTable.getScene() != null ? purchaseTable.getScene().getWindow() : null;
+            ProductPickerDialog.showAndPick(owner).ifPresent(prod -> {
+                ClipboardContent cc = new ClipboardContent();
+                cc.putString(prod.getBarcode() == null ? "" : prod.getBarcode());
+                Clipboard.getSystemClipboard().setContent(cc);
+
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setHeaderText("Produk terpilih");
+                info.setContentText(
+                        "Nama   : " + prod.getName() + "\n" +
+                                "Barcode: " + prod.getBarcode() + "\n" +
+                                "Harga Jual : " + FormatUtil.toRupiahNoDecimal(prod.getPrice())
+                );
+                info.showAndWait();
+                barcodeField.setText(prod.getBarcode());
+                buyPriceField.setText(String.valueOf(prod.getLastBuyPrice()));
+
+            });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Gagal membuka popup produk: " + ex.getMessage()).showAndWait();
+        }
     }
 }

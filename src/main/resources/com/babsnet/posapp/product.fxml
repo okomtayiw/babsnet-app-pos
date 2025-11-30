@@ -9,6 +9,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ComboBox?>
 
+<?import javafx.scene.control.CheckBox?>
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.babsnet.posapp.controller.ProductController"
@@ -29,7 +30,8 @@
 
         <HBox spacing="10">
             <TextField fx:id="stockField" promptText="Stock"  editable="true" />
-            <TextField fx:id="priceField" promptText="Price" />
+            <TextField fx:id="buyPriceField" promptText="Harga Beli" />
+            <TextField fx:id="priceField" promptText="Harga Jual" />
             <ComboBox fx:id="unitComboBox" promptText="Select Unit" />
             <Button text="+ Add Unit" onAction="#showAddUnitDialog" style="-fx-background-color: #6c757d; -fx-text-fill: white;" />
         </HBox>
@@ -52,17 +54,44 @@
         <Button text="Reset" onAction="#resetSearch" />
         <Button text="Refresh" onAction="#loadProducts" />
         <Button fx:id="exportPdfBtn" text="Export Barcode to PDF" onAction="#exportBarcodePdf"/>
+        <Button text="Export CSV" onAction="#exportProductsCsv"/>
+        <Button text="Export PDF" onAction="#exportProductsPdf"/>
 
+
+    </HBox>
+
+    <HBox spacing="10">
+        <Label text="Type:"/>
+        <ComboBox fx:id="typeFilterCombo" promptText="All Types" />
+
+        <Label text="Unit:"/>
+        <ComboBox fx:id="unitFilterCombo" promptText="All Units" />
+
+        <Label text="Stock:"/>
+        <TextField fx:id="stockMinField" promptText="min" prefWidth="70"/>
+        <Label text="-"/>
+        <TextField fx:id="stockMaxField" promptText="max" prefWidth="70"/>
+
+        <Label text="Price:"/>
+        <TextField fx:id="priceMinField" promptText="min" prefWidth="90"/>
+        <Label text="-"/>
+        <TextField fx:id="priceMaxField" promptText="max" prefWidth="90"/>
+
+        <CheckBox fx:id="zeroStockOnlyCheck" text="Stok = 0"/>
+        <CheckBox fx:id="selectedOnlyCheck" text="Selected only"/>
+
+        <Button text="Clear Filters" onAction="#clearFilterControls"/>
     </HBox>
 
     <!-- Table Product -->
     <TableView fx:id="productTable" prefHeight="400" style="-fx-font-size: 14px;">
         <columns>
-            <TableColumn fx:id="colSelected" text="Select" prefWidth="50"/>
+            <TableColumn fx:id="colSelected" text="Select" prefWidth="90" style="-fx-text-fill: black;"/>
             <TableColumn fx:id="colId" text="ID" prefWidth="50" style="-fx-text-fill: black;" />
             <TableColumn fx:id="colName" text="Product Name" prefWidth="200" style="-fx-text-fill: black;" />
             <TableColumn fx:id="colBarcode" text="Barcode" prefWidth="150" style="-fx-text-fill: black;" />
             <TableColumn fx:id="colStock" text="Stock" prefWidth="80" style="-fx-text-fill: black;" />
+            <TableColumn fx:id="colLastBuyPrice" text="Last Buy Price" prefWidth="100" style="-fx-text-fill: black;" />
             <TableColumn fx:id="colPrice" text="Price" prefWidth="100" style="-fx-text-fill: black;" />
             <TableColumn fx:id="colType" text="Type" prefWidth="100" style="-fx-text-fill: black;" />
             <TableColumn fx:id="colUnit" text="Unit" prefWidth="80" style="-fx-text-fill: black;" />

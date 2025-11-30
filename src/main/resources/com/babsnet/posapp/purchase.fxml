@@ -30,6 +30,7 @@
         <Button text="Add Product" onAction="#addProductToPurchase" />
         <Button text="Update Product" fx:id="updateButton" onAction="#updateSelectedProduct" disable="true" />
         <Button text="Delete Product" fx:id="deleteButton" onAction="#deleteSelectedProduct" disable="true" />
+        <Button text="Reset Product" fx:id="resetButton" onAction="#resetSelectedProduct" disable="true" />
 
     </HBox>
 

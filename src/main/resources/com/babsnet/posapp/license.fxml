@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.babsnet.posapp.controller.LicenseController" spacing="10" style="-fx-padding: 16;">
+    <Label text="Aktivasi Lisensi"/>
+    <Label fx:id="lblStatus" style="-fx-font-weight: bold;"/>
+    <Label text="Hardware ID:"/>
+    <HBox spacing="8">
+        <TextField fx:id="txtHardwareId" editable="false"
+                   style="-fx-font-family: Consolas, 'Courier New', monospace;"/>
+        <Button text="Copy" onAction="#onCopyHw"/>
+    </HBox>
+    <HBox spacing="8">
+        <Button text="Import License (.lic)" onAction="#onImportLicense"/>
+        <Button text="Keluar" onAction="#onExit"/>
+    </HBox>
+</VBox>

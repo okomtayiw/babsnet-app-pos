@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.babsnet.posapp.controller.OnlineTransactionController"
+            fx:id="root">
+
+    <top>
+        <ToolBar>
+            <Label text="Cari:"/>
+            <TextField fx:id="tfSearch" promptText="No transaksi / customer / code / ref / rc" prefWidth="300"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="Status:"/>
+            <ComboBox fx:id="cbStatus" prefWidth="140"/>
+            <Button text="Daftar Produk PrePaid" onAction="#openProductDialogPrePaid" mnemonicParsing="false"/>
+            <Button text="Daftar Produk PostPaid" onAction="#openProductDialogPostPaid" mnemonicParsing="false"/>
+
+            <Button fx:id="btnCheckStatus" text="Check Status" />
+            <Button fx:id="btnPrintStruk"  text="Print Struk"  />
+
+
+            <Button fx:id="btnRefresh" text="Refresh"/>
+            <Button fx:id="btnDownload"  text="Mambuat Laporan"  />
+            <ProgressIndicator fx:id="loading" prefWidth="20" prefHeight="20" visible="false"/>
+        </ToolBar>
+    </top>
+
+    <center>
+        <TableView fx:id="table">
+            <columns>
+                <TableColumn fx:id="colId" text="ID" prefWidth="60"/>
+                <TableColumn fx:id="colDate" text="Tanggal" prefWidth="150"/>
+                <TableColumn fx:id="colStatus" text="Status" prefWidth="90"/>
+                <TableColumn fx:id="colCustomer" text="Customer ID" prefWidth="140"/>
+                <TableColumn fx:id="colCategory" text="Kategori" prefWidth="100"/>
+                <TableColumn fx:id="colProduct" text="Product Code" prefWidth="120"/>
+                <TableColumn fx:id="colUnit" text="Harga" prefWidth="110"/>
+                <TableColumn fx:id="colMessage" text="Message" prefWidth="200"/>
+                <TableColumn fx:id="colRef" text="Ref ID" prefWidth="200"/>
+                <TableColumn fx:id="colAction" text="Action" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </center>
+</BorderPane>

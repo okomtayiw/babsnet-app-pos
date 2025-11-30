@@ -1,5 +1,7 @@
 package com.babsnet.posapp.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -48,20 +50,6 @@ public class FormatUtil {
         }
     }
 
-    public static double rupiahToDouble(String rupiah) {
-        if (rupiah == null || rupiah.isEmpty()) return 0;
-        String cleaned = rupiah.replace("Rp", "")
-                .replace(".", "")
-                .replace(",", ".")
-                .replaceAll("\\s+", "");
-        if (cleaned.isEmpty()) return 0;
-        try {
-            return Double.parseDouble(cleaned);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
     public static int parseIntSafe(String s) {
         if (s == null || s.trim().isEmpty()) return 0;
         try {
@@ -80,6 +68,19 @@ public class FormatUtil {
             return 0.0;
         }
     }
+
+
+    public static String toIntegerString(double value) {
+        return BigDecimal.valueOf(value).setScale(0, RoundingMode.HALF_UP).toPlainString();
+    }
+
+
+    public static String toIntegerString(double value, RoundingMode mode) {
+        if (mode == null) mode = RoundingMode.HALF_UP;
+        return BigDecimal.valueOf(value).setScale(0, mode).toPlainString();
+    }
+
+
 
 
 

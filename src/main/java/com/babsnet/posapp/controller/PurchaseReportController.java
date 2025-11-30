@@ -22,6 +22,9 @@ import javafx.stage.FileChooser;
 import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -40,6 +43,7 @@ public class PurchaseReportController {
     @FXML private TableColumn<PurchaseDetailReportRow, String> colSupplier;
     @FXML private TableColumn<PurchaseDetailReportRow, String> colUser;
     @FXML public Button exportPdfButton;
+    @FXML public Button exportCsvButton;
     @FXML private Label totalSubtotalLabel;
 
     private final PurchaseReportRepository repo = new PurchaseReportRepository();
@@ -75,6 +79,8 @@ public class PurchaseReportController {
                 setText((empty || item == null) ? null : FormatUtil.toRupiah(item));
             }
         });
+        startDatePicker.setValue(LocalDate.now());
+        endDatePicker.setValue(LocalDate.now());
         colSupplier.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSupplierName()));
         colUser.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getUserName()));
         detailTable.getItems().addListener((javafx.collections.ListChangeListener<PurchaseDetailReportRow>) c -> updateTotalSubtotalLabel());
@@ -113,7 +119,11 @@ public class PurchaseReportController {
         }
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Simpan PDF");
-        fileChooser.setInitialFileName("laporan_detail_pembelian.pdf");
+        String defaultNamePdf = "laporan_detail_pembelian"
+                + (start != null ? "_" + start : "")
+                + (end   != null ? "-" + end   : "")
+                + ".pdf";
+        fileChooser.setInitialFileName(defaultNamePdf);
         File file = fileChooser.showSaveDialog(exportPdfButton.getScene().getWindow());
         if (file == null) return;
 
@@ -202,4 +212,79 @@ public class PurchaseReportController {
             alert.showAndWait();
         });
     }
+
+    @FXML
+    private void handleExportDetailCsv() {
+        var rows = detailTable.getItems();
+        if (rows == null || rows.isEmpty()) {
+            showAlert("Tidak ada data untuk diexport!");
+            return;
+        }
+
+        // Nama file default pakai periode
+        LocalDate start = startDatePicker.getValue();
+        LocalDate end   = endDatePicker.getValue();
+        String defaultName = "laporan_detail_pembelian"
+                + (start != null ? "_" + start : "")
+                + (end   != null ? "-" + end   : "")
+                + ".csv";
+
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Simpan CSV");
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        fc.setInitialFileName(defaultName);
+        File file = fc.showSaveDialog(exportPdfButton.getScene().getWindow());
+        if (file == null) return;
+
+        final char DELIM = ';'; // aman untuk regional ID
+
+        try (var out = Files.newBufferedWriter(Path.of(file.getAbsolutePath()), StandardCharsets.UTF_8)) {
+            // Tulis BOM agar Excel membaca UTF-8 dengan benar
+            out.write('\uFEFF');
+
+            // Header
+            out.write(String.join(String.valueOf(DELIM),
+                    "No", "Tanggal", "No. Pembelian", "Nama Produk", "Qty", "Harga Beli", "Subtotal", "Supplier", "User"));
+            out.write("\r\n");
+
+            int no = 1;
+            for (var r : rows) {
+                String tgl   = DateUtil.formatIsoToNice(r.getPurchaseDate());
+                String noBeli= csvEscape(r.getPurchaseNumber(), DELIM);
+                String prod  = csvEscape(r.getProductName(), DELIM);
+                String qty   = String.valueOf(r.getQty());
+                // Angka gunakan format numerik murni (tanpa "Rp" & tanpa pemisah ribuan)
+                String harga = FormatUtil.toRupiah(r.getBuyPrice());
+                String sub   = FormatUtil.toRupiah(r.getSubtotal());
+                String supp  = csvEscape(r.getSupplierName(), DELIM);
+                String user  = csvEscape(r.getUserName(), DELIM);
+
+                out.write(no++ + String.valueOf(DELIM)
+                        + csvEscape(tgl, DELIM) + DELIM
+                        + noBeli + DELIM
+                        + prod + DELIM
+                        + qty + DELIM
+                        + harga + DELIM
+                        + sub + DELIM
+                        + supp + DELIM
+                        + user);
+                out.write("\r\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Gagal export CSV: " + e.getMessage());
+            return;
+        }
+
+        showAlert("Export CSV berhasil: " + file.getAbsolutePath());
+    }
+
+    // helper: escape nilai CSV (quote kalau mengandung delimiter/kutip/baris baru)
+    private String csvEscape(String s, char delim) {
+        if (s == null) return "";
+        boolean needQuote = s.indexOf(delim) >= 0 || s.contains("\"") || s.contains("\n") || s.contains("\r");
+        String val = s.replace("\"", "\"\"");
+        return needQuote ? "\"" + val + "\"" : val;
+    }
+
 }

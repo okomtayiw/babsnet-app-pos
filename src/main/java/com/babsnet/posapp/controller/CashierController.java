@@ -11,22 +11,22 @@ import com.babsnet.posapp.util.ConfigUtil;
 import com.babsnet.posapp.util.FormatUtil;
 import com.babsnet.posapp.util.MessageDialogUtil;
 import com.babsnet.posapp.util.ThermalPrinterUtil;
+import com.babsnet.posapp.util.ReceiptPrintUtil;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.KeyCode;
+import javafx.scene.input.*;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.converter.IntegerStringConverter;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CashierController {
@@ -78,6 +78,13 @@ public class CashierController {
     private void addCashierShortcuts(Scene scene, Stage stage) {
         scene.setOnKeyPressed(event -> {
             KeyCode code = event.getCode();
+
+            if (code == KeyCode.F6) {
+                paymentMethodComboBox.requestFocus();
+                paymentMethodComboBox.show();
+                event.consume();
+                return;
+            }
 
             if (event.isControlDown() && code == KeyCode.L) {
                 handleClearTransaction();
@@ -322,8 +329,8 @@ public class CashierController {
                 return;
             }
 
-            double total = FormatUtil.rupiahToDouble(totalText.getText());
-            double payment = FormatUtil.rupiahToDouble(paymentField.getText());
+            double total = cart.stream().mapToDouble(p -> p.getPrice() * p.getStock()).sum();
+            double payment = Double.parseDouble(paymentField.getText());
             String paymentMethod = paymentMethodComboBox.getValue();
 
             if (payment < total) {
@@ -396,104 +403,50 @@ public class CashierController {
         Transaction transaction = transactionRepository.getTransactionById(transactionId);
         StringBuilder receipt = new StringBuilder();
 
-        // Header
-        receipt.append(centerText(ConfigUtil.get("company.name"), 32)).append("\n");
-        receipt.append(centerText(ConfigUtil.get("company.address"), 32)).append("\n");
-        receipt.append(centerText("NPWP: " + ConfigUtil.get("company.npwp"), 32)).append("\n");
-        receipt.append(repeat("-", 32)).append("\n");
+        receipt.append("\n");
 
+        ReceiptPrintUtil.appendCenteredWrap(receipt, ConfigUtil.get("company.name"), 32);
+        ReceiptPrintUtil.appendCenteredWrap(receipt, ConfigUtil.get("company.address"), 32);
+        ReceiptPrintUtil.appendCenteredWrap(receipt, ConfigUtil.get("company.city"), 32);
 
-        // Bon & Kasir
+        receipt.append(ReceiptPrintUtil.repeat("-", 32)).append("\n");
+
         String bonNumber = transaction.getTransactionNumber();
         String cashier = transaction.getUserName();
-        receipt.append(String.format("Bon %-22s%-8s\n", bonNumber, cashier));
-        receipt.append(repeat("-", 32)).append("\n");
+        receipt.append(String.format("Num. %-22s%-8s\n", bonNumber, cashier));
+        receipt.append(ReceiptPrintUtil.repeat("-", 32)).append("\n");
 
-        // Item Header
-        receipt.append(String.format("%-18s %3s %10s\n", "Item", "Qty", "Total"));
-        receipt.append(repeat("-", 32)).append("\n");
+        receipt.append(String.format("%-17s %3s %10s\n", "Item", "Qty", "Total"));
+        receipt.append(ReceiptPrintUtil.repeat("-", 32)).append("\n");
 
-        // Item List
         double totalBelanja = 0;
         int totalQty = 0;
         for (Product p : cart) {
-            double subtotal = p.getPrice() * p.getStock();
+            int qty = p.getStock();
+            double subtotal = p.getPrice() * qty;
             totalBelanja += subtotal;
-            totalQty += p.getStock();
-            appendProductLine(receipt, p.getName(), p.getStock(), subtotal);
+            totalQty += qty;
+
+            ReceiptPrintUtil.appendProductLine58(receipt, p.getName(), qty, subtotal);
         }
 
-        receipt.append(repeat("-", 32)).append("\n");
+        receipt.append(ReceiptPrintUtil.repeat("-", 32)).append("\n");
 
-        // Summary
         double totalDisc = 0;
-        double cash = payment;
-        double kembalian = cash - totalBelanja;
+        double cash      = payment;
+        double total     = totalBelanja - totalDisc; // total akhir (bukan "Subtotal")
+        double kembalian = cash - total;
 
-        receipt.append(formatSummary("Total Item", totalQty, totalBelanja));
-        receipt.append(formatSummary("Diskon", 0, totalDisc));
-        receipt.append(formatSummary("Total Bayar", 0, totalBelanja));
-        receipt.append(formatSummary("Tunai", 0, cash));
-        receipt.append(formatSummary("Kembalian", 0, kembalian));
-
-        receipt.append(repeat("-", 32)).append("\n");
-
-        // Footer
-        receipt.append(centerText("Terima kasih atas kunjungannya!", 32)).append("\n");
-
+        ReceiptPrintUtil.appendSummaryQtyAndAmount(receipt, "Total Item", totalQty, totalBelanja);
+        ReceiptPrintUtil.appendSummaryAmount(receipt, "Discount", totalDisc);
+        ReceiptPrintUtil.appendSummaryAmount(receipt, "Tunai", cash);
+        ReceiptPrintUtil.appendSummaryAmount(receipt, "Kembalian", kembalian);
+        receipt.append(ReceiptPrintUtil.repeat("-", 32)).append("\n");
+        receipt.append(ReceiptPrintUtil.centerText("Terima kasih atas kunjungannya!", 32)).append("\n");
         receiptPreview.setText(receipt.toString());
     }
 
-    private void appendProductLine(StringBuilder receipt, String name, int qty, double subtotal) {
-        int maxNameLength = 18;
-        List<String> lines = splitTextByLength(simplifyName(name), maxNameLength);
 
-        // Baris pertama: nama + qty + subtotal
-        receipt.append(String.format("%-" + maxNameLength + "s %3d %10s\n",
-                lines.get(0), qty, formatCurrency(subtotal)));
-
-        // Baris berikutnya (jika nama panjang)
-        for (int i = 1; i < lines.size(); i++) {
-            receipt.append(String.format("%-" + maxNameLength + "s\n", lines.get(i)));
-        }
-    }
-
-    private String simplifyName(String name) {
-        String[] words = name.split("\\s+");
-        if (words.length == 0) return "";
-
-        StringBuilder simplified = new StringBuilder(words[0].toUpperCase());
-        for (int i = 1; i < words.length; i++) {
-            simplified.append(" ").append(words[i].substring(0, 1).toUpperCase());
-        }
-        return simplified.toString();
-    }
-
-    private List<String> splitTextByLength(String text, int length) {
-        List<String> result = new ArrayList<>();
-        for (int i = 0; i < text.length(); i += length) {
-            result.add(text.substring(i, Math.min(i + length, text.length())));
-        }
-        return result;
-    }
-
-    private String centerText(String text, int width) {
-        int padding = (width - text.length()) / 2;
-        return " ".repeat(Math.max(0, padding)) + text;
-    }
-
-    private String repeat(String s, int count) {
-        return s.repeat(Math.max(0, count));
-    }
-
-    private String formatCurrency(double amount) {
-        return String.format("%,.0f", amount); // Tambah pemisah ribuan
-    }
-
-    private String formatSummary(String label, int qty, double amount) {
-        String qtyPart = qty > 0 ? String.format("%-3d", qty) : "";
-        return String.format("%-12s %3s %13s\n", label + ":", qtyPart, formatCurrency(amount));
-    }
 
     @FXML
     private void handleCopy() {
@@ -518,17 +471,18 @@ public class CashierController {
         [Ctrl+L]   : Clear transaksi/cart
         [Enter]    : Tambah produk (di barcodeField) / proses payment (di paymentField)
         [ALT]      : Fokus ke kolom pembayaran
-        [F8]       : Pilih produk pertama di tabel
-        [F9]       : Pilih produk terakhir di tabel
-        [F10]      : Edit Qty produk terpilih
-        [F11]      : Print struk
-        [F12]      : Copy struk ke clipboard
+        [F8]       : Pilih produk pertama di tabel (FN + F8)
+        [F9]       : Pilih produk terakhir di tabel (FN + F9)
+        [F10]      : Edit Qty produk terpilih 
+        [F6]       : Pilih metode pembayaran (FN + F6)
+        [F11]      : Print struk (FN + F11)
+        [F12]      : Copy struk ke clipboard 
         """;
         MessageDialogUtil.showInfo(info);
     }
 
     private void showProductSearchPopup(String keyword) {
-        List<Product> result = productRepo.searchProducts(keyword); // implementasi bebas, misal LIKE barcode/nama
+        List<Product> result = productRepo.searchProducts(keyword);
 
         if (result.isEmpty()) {
             MessageDialogUtil.showWarning("Produk tidak ditemukan!");
@@ -538,68 +492,120 @@ public class CashierController {
         Stage popupStage = new Stage();
         popupStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
 
+        // ====== Table ======
         TableView<Product> tableView = new TableView<>();
+
         TableColumn<Product, String> colBarcode = new TableColumn<>("Barcode");
         colBarcode.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getBarcode()));
+        colBarcode.setPrefWidth(140);
 
         TableColumn<Product, String> colName = new TableColumn<>("Name");
         colName.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getName()));
+        colName.setPrefWidth(260);
 
         TableColumn<Product, Double> colPrice = new TableColumn<>("Price");
         colPrice.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getPrice()));
         colPrice.setCellFactory(tc -> new TableCell<Product, Double>() {
-            @Override
-            protected void updateItem(Double price, boolean empty) {
+            @Override protected void updateItem(Double price, boolean empty) {
                 super.updateItem(price, empty);
-                if (empty || price == null) {
-                    setText(null);
-                } else {
-                    setText(FormatUtil.toRupiahNoDecimal(price));
-                }
+                setText(empty || price == null ? null : FormatUtil.toRupiahNoDecimal(price));
             }
         });
-        TableColumn<Product, Integer> colStock = new TableColumn<>("stock");
+        colPrice.setPrefWidth(120);
+
+        TableColumn<Product, Integer> colStock = new TableColumn<>("Stock");
         colStock.setCellValueFactory(c -> new SimpleObjectProperty<>(c.getValue().getStock()));
-        tableView.getColumns().addAll(colBarcode, colName, colPrice, colStock);
-        tableView.setItems(javafx.collections.FXCollections.observableArrayList(result));
-        tableView.setPrefWidth(400);
-        tableView.setPrefHeight(300);
+        colStock.setPrefWidth(90);
 
-        // Pilih produk double click/ENTER
-        tableView.setOnMouseClicked(event -> {
-            if (event.getClickCount() == 2) {
-                Product selected = tableView.getSelectionModel().getSelectedItem();
-                if (selected != null) {
-                    addProductToCart(selected);
-                    popupStage.close();
-                }
+        tableView.getColumns().addAll(colBarcode, colName, colPrice, colStock);
+        tableView.setPrefWidth(640);
+        tableView.setPrefHeight(360);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+
+        // ====== Data + Filter ======
+        var data = javafx.collections.FXCollections.observableArrayList(result);
+        var filtered = new javafx.collections.transformation.FilteredList<>(data, p -> true);
+        var sorted   = new javafx.collections.transformation.SortedList<>(filtered);
+        sorted.comparatorProperty().bind(tableView.comparatorProperty());
+        tableView.setItems(sorted);
+
+        // ====== Search field ======
+        TextField searchField = new TextField();
+        searchField.setPromptText("Cari barcode / nama… (Ctrl+F)");
+        if (keyword != null && !keyword.isBlank()) searchField.setText(keyword);
+
+        // filter realtime
+        searchField.textProperty().addListener((obs, old, q) -> {
+            final String query = q == null ? "" : q.trim().toLowerCase();
+            filtered.setPredicate(p -> {
+                if (query.isEmpty()) return true;
+                String b = p.getBarcode() == null ? "" : p.getBarcode().toLowerCase();
+                String n = p.getName()    == null ? "" : p.getName().toLowerCase();
+                return b.contains(query) || n.contains(query);
+            });
+            // auto pilih baris pertama setelah filter
+            if (!tableView.getItems().isEmpty()) {
+                tableView.getSelectionModel().select(0);
             }
         });
 
-        tableView.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                Product selected = tableView.getSelectionModel().getSelectedItem();
-                if (selected != null) {
-                    addProductToCart(selected);
-                    popupStage.close();
-                }
-            } else if (event.getCode() == KeyCode.ESCAPE) {
+        // ====== Keyboard UX ======
+        // Enter pilih item (baik dari table maupun dari search)
+        Runnable confirmPick = () -> {
+            Product selected = tableView.getSelectionModel().getSelectedItem();
+            if (selected == null && tableView.getItems().size() == 1) {
+                selected = tableView.getItems().get(0);
+            }
+            if (selected != null) {
+                addProductToCartPopup(selected);
+                popupStage.close();
+            }
+        };
+
+        tableView.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) confirmPick.run();
+        });
+
+        tableView.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                confirmPick.run();
+            } else if (e.getCode() == KeyCode.ESCAPE) {
                 popupStage.close();
             }
         });
 
+        searchField.setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.ENTER) {
+                confirmPick.run();
+            } else if (e.getCode() == KeyCode.DOWN) {
+                tableView.requestFocus();
+                tableView.getSelectionModel().select(0);
+            } else if (e.getCode() == KeyCode.ESCAPE) {
+                popupStage.close();
+            }
+        });
 
-        javafx.scene.layout.VBox root = new javafx.scene.layout.VBox(tableView);
-        root.setPadding(new javafx.geometry.Insets(10));
-        Scene scene = new Scene(root);
+        // Ctrl+F fokus ke search
+        Scene scene = new Scene(new VBox(8, searchField, tableView));
+        scene.getAccelerators().put(
+                new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN),
+                searchField::requestFocus
+        );
+
+        VBox root = (VBox) scene.getRoot();
+        root.setPadding(new Insets(10));
+
         popupStage.setScene(scene);
         popupStage.setTitle("Cari Produk");
-        popupStage.showAndWait();
-        Platform.runLater(() -> tableView.requestFocus());
+        popupStage.show();
+
+        // fokus awal ke search
+        Platform.runLater(searchField::requestFocus);
     }
 
-    // Tambahkan helper untuk add produk dari popup
-    private void addProductToCart(Product product) {
+
+
+    private void addProductToCartPopup(Product product) {
         int qtyToAdd = 1;
         Product existingProduct = cart.stream().filter(p -> product.getBarcode().equals(p.getBarcode())).findFirst().orElse(null);
 

@@ -1,6 +1,5 @@
 package com.babsnet.posapp.controller;
 
-import com.babsnet.posapp.model.Transaction;
 import com.babsnet.posapp.model.TransactionDetailReportRow;
 import com.babsnet.posapp.repository.TransactionReportRepository;
 import com.babsnet.posapp.util.DateUtil;
@@ -21,8 +20,11 @@ import javafx.scene.control.Label;
 import javafx.stage.FileChooser;
 
 import java.awt.*;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -42,6 +44,7 @@ public class TransactionReportController {
     @FXML private TableColumn<TransactionDetailReportRow, String> colPayment;
     @FXML private TableColumn<TransactionDetailReportRow, String> colUser;
     @FXML public Button exportPdfButton;
+    @FXML public Button exportCsvButton;
 
     @FXML private Label totalSubtotalLabel;
 
@@ -102,6 +105,8 @@ public class TransactionReportController {
                 }
             }
         });
+        startDatePicker.setValue(LocalDate.now());
+        endDatePicker.setValue(LocalDate.now());
         colPayment.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getPaymentMethod()));
         colUser.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getUserName()));
         detailTable.getItems().addListener((javafx.collections.ListChangeListener<TransactionDetailReportRow>) c -> updateTotalSubtotalLabel());
@@ -132,16 +137,21 @@ public class TransactionReportController {
     @FXML
     private void handleExportDetailPdf() {
         LocalDate start = startDatePicker.getValue();
-        LocalDate end = endDatePicker.getValue();
+        LocalDate end   = endDatePicker.getValue();
         List<TransactionDetailReportRow> reportRows = detailTable.getItems();
 
         if (reportRows.isEmpty()) {
             showAlert("Tidak ada data untuk diexport!");
             return;
         }
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Simpan PDF");
-        fileChooser.setInitialFileName("laporan_detail_penjualan.pdf");
+        String defaultNamePdf = "laporan_detail_penjualan"
+                + (start != null ? "_" + start : "")
+                + (end   != null ? "-" + end   : "")
+                + ".pdf";
+        fileChooser.setInitialFileName(defaultNamePdf);
         File file = fileChooser.showSaveDialog(exportPdfButton.getScene().getWindow());
         if (file == null) return;
 
@@ -152,71 +162,90 @@ public class TransactionReportController {
 
             document.add(new Paragraph("LAPORAN PENJUALAN DETAIL"));
             document.add(new Paragraph("Periode: " +
-                    (start != null ? start : "-") +
-                    " s.d " +
-                    (end != null ? end : "-")));
+                    (start != null ? start : "-") + " s.d " + (end != null ? end : "-")));
             document.add(new Paragraph("\n"));
 
-            // Font untuk header dan total
-            Font boldFont = new Font(Font.HELVETICA, 10, Font.BOLD);
+            Font boldFont    = new Font(Font.HELVETICA, 10, Font.BOLD);
             Font regularFont = new Font(Font.HELVETICA, 10, Font.NORMAL);
 
-            // Tabel 9 kolom (No. + data)
-            PdfPTable table = new PdfPTable(9);
+            // 10 kolom: No, Tanggal, No Transaksi, Nama Produk, Qty, Harga Beli, Harga Jual, Subtotal, Metode Bayar, Kasir
+            PdfPTable table = new PdfPTable(10);
             table.setWidthPercentage(100);
-            table.setWidths(new int[]{7, 12, 18, 20, 8, 12, 15, 15, 15});
+            table.setWidths(new int[]{7, 12, 18, 20, 8, 14, 14, 16, 12, 12});
 
-            // Header (tebal & background light gray)
-            String[] headers = {"No.", "Tanggal", "No. Transaksi", "Nama Produk", "Qty", "Harga", "Subtotal", "Metode Bayar", "Kasir"};
-            for (String header : headers) {
-                PdfPCell cell = new PdfPCell(new Phrase(header, boldFont));
-                cell.setBackgroundColor(new Color(230, 230, 230));
+            String[] headers = {"No.", "Tanggal", "No. Transaksi", "Nama Produk", "Qty",
+                    "Harga Beli", "Harga Jual", "Subtotal", "Metode Bayar", "Kasir"};
+            for (String h : headers) {
+                PdfPCell cell = new PdfPCell(new Phrase(h, boldFont));
+                cell.setBackgroundColor(new Color(230,230,230));
                 cell.setHorizontalAlignment(Element.ALIGN_CENTER);
                 cell.setPadding(5f);
                 table.addCell(cell);
             }
 
-            // Data rows
-            int no = 1;
-            double totalSubtotal = 0;
+            int    no = 1;
+            int    totalQty = 0;
+            double totalBeli = 0.0;
+            double totalJual = 0.0;
+            double totalSub  = 0.0;
+
             for (TransactionDetailReportRow row : reportRows) {
+                int qty        = row.getQty();
+                double buy     = row.getBuyPrice(); // harga beli per unit
+                double sell    = row.getPrice();    // harga jual per unit
+                double subtotal= row.getSubtotal(); // biasanya qty * sell
+
                 table.addCell(new Phrase(String.valueOf(no++), regularFont));
                 table.addCell(new Phrase(DateUtil.formatIsoToNice(row.getTransDate()), regularFont));
                 table.addCell(new Phrase(row.getTransactionNumber(), regularFont));
                 table.addCell(new Phrase(row.getProductName(), regularFont));
-                table.addCell(new Phrase(String.valueOf(row.getQty()), regularFont));
-                table.addCell(new Phrase(FormatUtil.toRupiah(row.getPrice()), regularFont));
-                table.addCell(new Phrase(FormatUtil.toRupiah(row.getSubtotal()), regularFont));
+                table.addCell(new Phrase(String.valueOf(qty), regularFont));
+                table.addCell(rightCell(FormatUtil.toRupiah(buy),  regularFont));   // Harga Beli
+                table.addCell(rightCell(FormatUtil.toRupiah(sell), regularFont));   // Harga Jual
+                table.addCell(rightCell(FormatUtil.toRupiah(subtotal), regularFont)); // Subtotal
                 table.addCell(new Phrase(row.getPaymentMethod(), regularFont));
                 table.addCell(new Phrase(row.getUserName(), regularFont));
 
-                totalSubtotal += row.getSubtotal();
+                totalQty  += qty;
+                totalBeli += qty * buy;
+//                totalJual += qty * sell;
+                totalSub  += subtotal;
             }
 
-            // Baris TOTAL (tebal & background lebih gelap)
-            PdfPCell totalCell = new PdfPCell(new Phrase("TOTAL", boldFont));
-            totalCell.setColspan(6);
-            totalCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            totalCell.setBackgroundColor(new Color(200, 200, 200));
-            totalCell.setPaddingRight(10f);
-            totalCell.setPadding(6f);
-            table.addCell(totalCell);
+            // ===== Row TOTAL =====
+            PdfPCell totalLabel = new PdfPCell(new Phrase("TOTAL", boldFont));
+            totalLabel.setColspan(4);
+            totalLabel.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            totalLabel.setBackgroundColor(new Color(200,200,200));
+            totalLabel.setPadding(6f);
+            totalLabel.setNoWrap(true);
+            table.addCell(totalLabel);
 
-            PdfPCell totalValue = new PdfPCell(new Phrase(FormatUtil.toRupiah(totalSubtotal), boldFont));
-            totalValue.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            totalValue.setBackgroundColor(new Color(200, 200, 200));
-            totalValue.setPadding(6f);
-            table.addCell(totalValue);
+            table.addCell(centerCell(String.valueOf(totalQty), boldFont));                 // Qty
+            PdfPCell totalBeliCell = rightCell(FormatUtil.toRupiah(totalBeli), boldFont);  // Harga Beli
+            totalBeliCell.setBackgroundColor(new Color(200,200,200));
+            table.addCell(totalBeliCell);
 
-            // Kolom Metode Bayar & Kasir dikosongkan
-            PdfPCell empty1 = new PdfPCell(new Phrase(""));
-            empty1.setBackgroundColor(new Color(200, 200, 200));
-            empty1.setPadding(6f);
-            table.addCell(empty1);
-            PdfPCell empty2 = new PdfPCell(new Phrase(""));
-            empty2.setBackgroundColor(new Color(200, 200, 200));
-            empty2.setPadding(6f);
-            table.addCell(empty2);
+            PdfPCell totalJualCell = new PdfPCell(new Phrase(""));  // Harga Jual
+            totalJualCell.setBackgroundColor(new Color(200,200,200));
+            table.addCell(totalJualCell);
+
+            PdfPCell totalSubCell = rightCell(FormatUtil.toRupiah(totalSub), boldFont);    // Subtotal
+            totalSubCell.setBackgroundColor(new Color(200,200,200));
+            table.addCell(totalSubCell);
+
+            // kolom 9 & 10 kosong
+            PdfPCell empty9  = new PdfPCell(new Phrase(""));
+            empty9.setBackgroundColor(new Color(200,200,200));
+            empty9.setPadding(6f);
+            empty9.setNoWrap(true);
+            table.addCell(empty9);
+
+            PdfPCell empty10 = new PdfPCell(new Phrase(""));
+            empty10.setBackgroundColor(new Color(200,200,200));
+            empty10.setPadding(6f);
+            empty10.setNoWrap(true);
+            table.addCell(empty10);
 
             document.add(table);
             document.close();
@@ -228,10 +257,122 @@ public class TransactionReportController {
     }
 
 
+    // helper kecil biar rapi
+    private PdfPCell rightCell(String text, Font font) {
+        PdfPCell c = new PdfPCell(new Phrase(text, font));
+        c.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        c.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        c.setPadding(6f);
+        c.setNoWrap(true);           // <- kunci utama: jangan wrap
+        return c;
+    }
+    private PdfPCell centerCell(String text, Font font) {
+        PdfPCell c = new PdfPCell(new Phrase(text, font));
+        c.setHorizontalAlignment(Element.ALIGN_CENTER);
+        c.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        c.setPadding(6f);
+        c.setNoWrap(true);
+        return c;
+    }
+
+
+
+
     private void showAlert(String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
             alert.showAndWait();
         });
     }
+
+    @FXML
+    private void handleExportDetailCsv() {
+        List<TransactionDetailReportRow> reportRows = detailTable.getItems();
+        if (reportRows == null || reportRows.isEmpty()) {
+            showAlert("Tidak ada data untuk diexport!");
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Simpan CSV");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        LocalDate start = startDatePicker.getValue();
+        LocalDate end   = endDatePicker.getValue();
+        String defaultName = "laporan_detail_penjualan"
+                + (start != null ? "_" + start : "")
+                + (end   != null ? "-" + end   : "")
+                + ".csv";
+        fileChooser.setInitialFileName(defaultName);
+        File file = fileChooser.showSaveDialog(exportCsvButton.getScene().getWindow());
+        if (file == null) return;
+
+        try (BufferedWriter writer = new BufferedWriter(
+                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+
+            // Tulis BOM agar Excel Windows mendeteksi UTF-8 dengan benar (terutama untuk teks Indonesia)
+            writer.write('\uFEFF');
+
+            // Header
+            String[] headers = {"No.", "Tanggal", "No. Transaksi", "Nama Produk", "Qty", "Harga Beli","Harga Jual", "Subtotal", "Metode Bayar", "Kasir"};
+            writer.write(String.join(",", headers));
+            writer.newLine();
+
+            // Data
+            int no = 1;
+            double totalSubtotal = 0.0;
+
+            for (TransactionDetailReportRow row : reportRows) {
+                String tanggal = DateUtil.formatIsoToNice(row.getTransDate());
+                String number = row.getTransactionNumber();
+                String product = row.getProductName();
+                int qty = row.getQty();
+                double buyPrice = row.getBuyPrice();
+                double price = row.getPrice();
+                double subtotal = row.getSubtotal();
+                String payment = row.getPaymentMethod();
+                String user = row.getUserName();
+
+                totalSubtotal += subtotal;
+
+                // Tulis baris (angka dibiarkan numerik, tidak dibungkus quote; teks di-escape)
+                String line = String.join(",",
+                        String.valueOf(no++),
+                        csv(tanggal),
+                        csv(number),
+                        csv(product),
+                        String.valueOf(qty),
+                        csv(FormatUtil.toRupiah(buyPrice)),
+                        csv(FormatUtil.toRupiah(price)),
+                        csv(FormatUtil.toRupiah(subtotal)),
+                        csv(payment),
+                        csv(user)
+                );
+                writer.write(line);
+                writer.newLine();
+            }
+
+            // Baris TOTAL (letakkan label di kolom 6 agar mirip tabel PDF)
+            String totalLine = String.join(",",
+                    "", "", "", "", "", "TOTAL",
+                    csv(FormatUtil.toRupiah(totalSubtotal)),
+                    "", ""
+            );
+            writer.write(totalLine);
+            writer.newLine();
+
+            writer.flush();
+            showAlert("Export CSV berhasil: " + file.getAbsolutePath());
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Gagal export CSV: " + e.getMessage());
+        }
+    }
+
+    private static String csv(String s) {
+        if (s == null) return "";
+        boolean needQuote = s.contains(",") || s.contains("\"") || s.contains("\n") || s.contains("\r");
+        String v = s.replace("\"", "\"\"");
+        return needQuote ? "\"" + v + "\"" : v;
+    }
+
 }

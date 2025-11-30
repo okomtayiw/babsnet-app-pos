@@ -24,6 +24,7 @@
             <Label text="☰ MENU" style="-fx-font-size: 16px; -fx-font-weight: bold;" />
             <Button text="Home" onAction="#goToHome"/>
             <Button text="Setting" onAction="#goToSetting"/>
+            <Button text="Payment Online" onAction="#goToPaymentOnline"/>
             <Button fx:id="btnUsers" text="Users" onAction="#goToUsers"/>
             <Button fx:id="btnSuppliers" text="Supplier" onAction="#goToSuppliers"/>
             <Button text="Chasier (F1)" onAction="#goToCashier"/>

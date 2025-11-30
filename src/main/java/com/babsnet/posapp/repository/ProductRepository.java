@@ -21,7 +21,7 @@ public class ProductRepository {
 
     public static Product getProductByBarcode(String barcode) {
         String sql = """
-        SELECT p.id, p.name, p.stock, p.price, p.discount, p.barcode, pt.type_name
+        SELECT p.id, p.name, p.stock, p.price,p.last_buy_price, p.discount, p.barcode, pt.type_name
         FROM products p
         LEFT JOIN product_types pt ON p.type_id = pt.id
         WHERE p.barcode = ?
@@ -38,11 +38,12 @@ public class ProductRepository {
                 String name = rs.getString("name");
                 int stock = rs.getInt("stock");
                 double price = rs.getDouble("price");
+                double lastBuyPrice = rs.getDouble("last_buy_price");
                 double discount = rs.getDouble("discount");
                 String typeName = rs.getString("type_name");
                 String barcodeValue = rs.getString("barcode");
 
-                return new Product(id, name, stock, price, discount, typeName, barcodeValue);
+                return new Product(id, name, stock, price,lastBuyPrice, discount, typeName, barcodeValue);
             }
 
         } catch (Exception e) {
@@ -241,6 +242,19 @@ public class ProductRepository {
             pstmt.executeUpdate();
         }
     }
+
+    public static void updateLastBuyPrice(Connection conn, int productId, double lastBuyPrice) throws SQLException {
+        final String sql = "UPDATE products SET last_buy_price = ?, updated_date = CURRENT_TIMESTAMP WHERE id = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setDouble(1, lastBuyPrice);
+            pstmt.setInt(2, productId);
+            int updated = pstmt.executeUpdate();
+            if (updated == 0) {
+                throw new SQLException("Product not found, id=" + productId);
+            }
+        }
+    }
+
 
     public static void reduceStock(Connection conn, int productId, int quantity) throws SQLException {
         String sql = "UPDATE products SET stock = stock - ? WHERE id = ?";
@@ -546,6 +560,7 @@ public class ProductRepository {
                         rs.getString("name"),
                         rs.getInt("stock"),
                         rs.getDouble("price"),
+                        rs.getDouble("last_buy_price"),
                         rs.getDouble("discount"),
                         rs.getString("type_name"),
                         rs.getString("barcode")
@@ -586,6 +601,7 @@ public class ProductRepository {
                         rs.getString("name"),
                         rs.getInt("stock"),
                         rs.getDouble("price"),
+                        rs.getDouble("last_buy_price"),
                         rs.getDouble("discount"),
                         rs.getString("type_name"),
                         rs.getString("barcode")
@@ -626,6 +642,7 @@ public class ProductRepository {
     // update product
     public static void updateProduct(String name,
                                      int stock,
+                                     double buyPrice,
                                      double price,
                                      String updatedBy,
                                      String updatedDate,
@@ -634,7 +651,7 @@ public class ProductRepository {
                                      Product product, String barcode) {
     String sql = """
         UPDATE products
-        SET name = ?, stock = ?, price = ?, type_id = ?, unit_id = ?, barcode = ?, updated_by = ?, updated_date = ?
+        SET name = ?, stock = ?, last_buy_price = ?, price = ?, type_id = ?, unit_id = ?, barcode = ?, updated_by = ?, updated_date = ?
         WHERE id = ?
     """;
 
@@ -643,13 +660,14 @@ public class ProductRepository {
 
             pstmt.setString(1, name);
             pstmt.setInt(2, stock);
-            pstmt.setDouble(3, price);
-            pstmt.setInt(4, typeId);
-            pstmt.setInt(5, unitId);
-            pstmt.setString(6, barcode);
-            pstmt.setString(7, updatedBy);
-            pstmt.setString(8, updatedDate);
-            pstmt.setInt(9, product.getId());
+            pstmt.setDouble(3, buyPrice);
+            pstmt.setDouble(4, price);
+            pstmt.setInt(5, typeId);
+            pstmt.setInt(6, unitId);
+            pstmt.setString(7, barcode);
+            pstmt.setString(8, updatedBy);
+            pstmt.setString(9, updatedDate);
+            pstmt.setInt(10, product.getId());
 
             pstmt.executeUpdate();
 
@@ -659,19 +677,20 @@ public class ProductRepository {
         }
     }
 
-    public static void addProduct(String name, int stock, double price, String createdBy, String createdDate, int typeId, String barcode, int unitId) {
-        String sql = "INSERT INTO products (name, stock, price, type_id, unit_id, barcode, created_by, created_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public static void addProduct(String name, int stock, double buyPrice,double price, String createdBy, String createdDate, int typeId, String barcode, int unitId) {
+        String sql = "INSERT INTO products (name, stock, last_buy_price,price, type_id, unit_id, barcode, created_by, created_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, name);
             pstmt.setInt(2, stock);
-            pstmt.setDouble(3, price);
-            pstmt.setInt(4, typeId);
-            pstmt.setInt(5, unitId);
-            pstmt.setString(6, barcode);
-            pstmt.setString(7, createdBy);
-            pstmt.setString(8, createdDate);
+            pstmt.setDouble(3, buyPrice);
+            pstmt.setDouble(4, price);
+            pstmt.setInt(5, typeId);
+            pstmt.setInt(6, unitId);
+            pstmt.setString(7, barcode);
+            pstmt.setString(8, createdBy);
+            pstmt.setString(9, createdDate);
             pstmt.executeUpdate();
 
         } catch (Exception e) {
@@ -697,6 +716,7 @@ public class ProductRepository {
                 p.setId(rs.getInt("id"));
                 p.setBarcode(rs.getString("barcode"));
                 p.setName(rs.getString("name"));
+                p.setLastBuyPrice(rs.getDouble("last_buy_price"));
                 p.setPrice(rs.getDouble("price"));
                 p.setStock(rs.getInt("stock"));
                 products.add(p);

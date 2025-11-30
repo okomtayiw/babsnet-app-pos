@@ -1,75 +1,65 @@
 package com.babsnet.posapp.util;
+
+import javax.print.Doc;
+import javax.print.DocFlavor;
+import javax.print.DocPrintJob;
 import javax.print.PrintService;
 import javax.print.PrintServiceLookup;
-import java.awt.*;
-import java.awt.print.*;
+import javax.print.SimpleDoc;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class ThermalPrinterUtil {
-    public static void printToThermalPrinter(String receiptContent) {
-        PrinterJob job = PrinterJob.getPrinterJob();
 
-        // Pilih printer thermal
-        PrintService thermalPrinter = selectThermalPrinter("EPSON", "POS", "THERMAL");
+    public static void printToThermalPrinter(String receiptContent) {
+        PrintService thermalPrinter = selectThermalPrinter("chasier", "EPSON", "POS", "Generic");
         if (thermalPrinter == null) {
             MessageDialogUtil.showError("Thermal printer not found!");
             return;
         }
 
         try {
-            job.setPrintService(thermalPrinter);
-        } catch (PrinterException e) {
+
+            byte[] payload = buildEscPosPayload(receiptContent);
+            DocPrintJob job = thermalPrinter.createPrintJob();
+            Doc doc = new SimpleDoc(payload, DocFlavor.BYTE_ARRAY.AUTOSENSE, null);
+            PrintRequestAttributeSet attrs = new HashPrintRequestAttributeSet();
+            job.print(doc, attrs);
+        } catch (Exception e) {
             e.printStackTrace();
-            return;
-        }
-
-        // Set printable content
-        job.setPrintable((graphics, pageFormat, pageIndex) -> {
-            if (pageIndex > 0) return Printable.NO_SUCH_PAGE;
-
-            Graphics2D g2d = (Graphics2D) graphics;
-
-            // Set margin 0
-            PageFormat customFormat = getThermalPageFormat();
-            g2d.translate(customFormat.getImageableX(), customFormat.getImageableY());
-            g2d.setFont(new Font("Monospaced", Font.PLAIN, 8));
-
-            // Cetak baris per baris
-            String[] lines = receiptContent.split("\\n");
-            int y = 10;
-            for (String line : lines) {
-                g2d.drawString(line, 0, y);
-                y += 12;
-            }
-
-            // Auto cut (Opsional: Sesuaikan dengan printer & driver)
-            g2d.drawString("\u001D\u0056\u0001", 0, y + 20);  // ESC/POS Cut command (tidak semua printer support)
-
-            return Printable.PAGE_EXISTS;
-        }, getThermalPageFormat());
-
-        try {
-            job.print();
-        } catch (PrinterException e) {
-            e.printStackTrace();
+            MessageDialogUtil.showError("Failed to print: " + e.getMessage());
         }
     }
 
-    private static PageFormat getThermalPageFormat() {
-        PageFormat format = new PageFormat();
-        Paper paper = new Paper();
 
-        // Paper 58mm: sekitar 200 point width (72 point = 1 inch)
-        double width = 200;
-        double height = 500; // bisa dynamic
 
-        paper.setSize(width, height);
-        paper.setImageableArea(0, 0, width, height); // tanpa margin
-        format.setPaper(paper);
+    private static byte[] buildEscPosPayload(String text) throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        return format;
+        out.write(new byte[]{0x1B, '@'});                 // ESC @
+
+
+        out.write(new byte[]{0x1B, 'a', 0x00});           // ESC a 0
+
+        String normalized = text.replace("\r\n", "\n");
+        out.write(normalized.getBytes(getPrinterCharset()));
+        if (!normalized.endsWith("\n")) out.write('\n');
+
+        out.write(new byte[]{0x1B, 'd', 0x03});
+        out.write(cutPartial());
+
+        return out.toByteArray();
     }
 
+    private static byte[] cutPartial() { return new byte[]{0x1D, 'V', 0x41, 0x00}; }
+    @SuppressWarnings("unused")
+    private static byte[] cutFull()    { return new byte[]{0x1D, 'V', 0x00}; }
+
+    // ===================== Printer discovery =====================
     private static PrintService selectThermalPrinter(String... keywords) {
         return Arrays.stream(PrintServiceLookup.lookupPrintServices(null, null))
                 .filter(printer -> {
@@ -79,5 +69,11 @@ public class ThermalPrinterUtil {
                 .findFirst()
                 .orElse(null);
     }
-}
 
+    // ===================== Encoding =====================
+    private static Charset getPrinterCharset() {
+        if (Charset.isSupported("CP858")) return Charset.forName("CP858");
+        if (Charset.isSupported("CP437")) return Charset.forName("CP437");
+        return StandardCharsets.ISO_8859_1;
+    }
+}

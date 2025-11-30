@@ -46,6 +46,13 @@ dependencies {
     implementation("org.mariadb.jdbc:mariadb-java-client:3.3.3")
     implementation("com.google.zxing:core:3.5.3")
     implementation("com.google.zxing:javase:3.5.3")
+    // JSON
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:2.17.2")
+
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.12")
+
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
 
@@ -68,6 +75,15 @@ tasks.named("jlink") {
 jlink {
     imageZip.set(layout.buildDirectory.file("distributions/app-${javafx.platform.classifier}.zip"))
     options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
+
+
+    // FIX SSLHandshakeException (modul crypto wajib)
+    addOptions(
+        "--add-modules", "jdk.crypto.ec",
+        "--add-modules", "jdk.crypto.cryptoki",
+        "--add-modules", "java.security.sasl"
+    )
+
     launcher {
         name = "POSApp"
     }

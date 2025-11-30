@@ -1,6 +1,6 @@
 package com.babsnet.posapp.util;
 
-import com.beust.ah.A;
+import com.babsnet.posapp.licensing.LicenseStatus;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -61,4 +61,26 @@ public class SceneSwitcher {
             e.printStackTrace();
         }
     }
+
+    public static void showLicenseStage(LicenseStatus status) {
+        try {
+            FXMLLoader loader = new FXMLLoader(SceneSwitcher.class.getResource("/com/babsnet/posapp/license.fxml"));
+            Scene scene = new Scene(loader.load(), 520, 360);
+            Stage stage = new AppStage();
+            stage.setTitle("Aktivasi Lisensi");
+            stage.setScene(scene);
+            stage.setResizable(false);
+
+            // opsional: kirim status ke controller
+            Object ctrl = loader.getController();
+            if (ctrl instanceof com.babsnet.posapp.controller.LicenseController lc) {
+                lc.initStatus(status);
+            }
+
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

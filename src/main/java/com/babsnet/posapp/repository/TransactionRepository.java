@@ -7,6 +7,7 @@ import com.babsnet.posapp.util.DatabaseHelper;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -86,28 +87,18 @@ public class TransactionRepository {
     }
 
 
-    public static void updateTransactionTotal(Connection conn, int transactionId) throws Exception {
-        String sumSql = "SELECT SUM(subtotal) AS total FROM transaction_details WHERE transaction_id = ?";
-        String updateSql = "UPDATE transactions SET total = ? WHERE id = ?";
-        try (
-                PreparedStatement sumPs = conn.prepareStatement(sumSql)
-        ) {
-            sumPs.setInt(1, transactionId);
-            ResultSet rs = sumPs.executeQuery();
-            double total = 0;
-            if (rs.next()) {
-                total = rs.getDouble("total");
-            }
-
-            try (PreparedStatement updatePs = conn.prepareStatement(updateSql)) {
-                updatePs.setDouble(1, total);
-                updatePs.setInt(2, transactionId);
-                updatePs.executeUpdate();
-            }
+    public static void updateTransactionTotal(Connection conn, int transactionId) throws SQLException {
+        String sql =
+                "UPDATE transactions t " +
+                        "SET t.total = (" +
+                        "  SELECT COALESCE(SUM(COALESCE(td.subtotal, td.qty*td.price)), 0) " +
+                        "  FROM transaction_details td WHERE td.transaction_id = t.id" +
+                        ") WHERE t.id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, transactionId);
+            ps.executeUpdate();
         }
     }
-
-
 
 
     public Transaction getTransactionById(int transactionId) {

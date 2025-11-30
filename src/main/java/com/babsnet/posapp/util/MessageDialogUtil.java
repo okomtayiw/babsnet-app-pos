@@ -2,6 +2,8 @@ package com.babsnet.posapp.util;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.stage.Modality;
+import javafx.stage.Window;
 
 import java.util.Optional;
 

@@ -6,6 +6,7 @@ import com.babsnet.posapp.util.AppStage;
 import com.babsnet.posapp.util.FocusablePage;
 import com.babsnet.posapp.util.SceneSwitcher;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -160,12 +161,18 @@ public class HomeController {
     @FXML public void goToReportPurchase() { setCenterContent("/com/babsnet/posapp/purchase_report.fxml"); }
 
     // Untuk isi dashboard/home (default isi tengah)
+    @FXML
     public void goToHomeContent() {
         setCenterContent("/com/babsnet/posapp/dashboard.fxml");
     }
 
+    @FXML
     public void goToSettingContent() {
         setCenterContent("/com/babsnet/posapp/setting_page.fxml");
+    }
+    @FXML
+    public void goToPaymentOnline(ActionEvent actionEvent) {
+        setCenterContent("/com/babsnet/posapp/OnlineTransactionView.fxml");
     }
 
     // Logout (esc)

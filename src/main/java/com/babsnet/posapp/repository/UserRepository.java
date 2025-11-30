@@ -81,7 +81,7 @@ public class UserRepository {
     }
 
     public boolean update(User user) {
-        String sql = "UPDATE users SET password=?, first_name=?, last_name=?, phone_number=?, email=?, role=? WHERE username=?";
+        String sql = "UPDATE users SET password=?, first_name=?, last_name=?, phone_number=?, email=?, role=?, username=? WHERE id=?";
         try (Connection conn = DatabaseHelper.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, user.getPassword());
@@ -91,6 +91,7 @@ public class UserRepository {
             ps.setString(5, user.getEmail());
             ps.setString(6, user.getRole());
             ps.setString(7, user.getUsername());
+            ps.setInt(8, user.getId());
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             return false;

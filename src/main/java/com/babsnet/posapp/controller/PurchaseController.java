@@ -10,15 +10,20 @@ import com.babsnet.posapp.repository.SupplierRepository;
 import com.babsnet.posapp.session.SessionManager;
 import com.babsnet.posapp.util.FocusablePage;
 import com.babsnet.posapp.util.FormatUtil;
+import com.babsnet.posapp.util.MessageDialogUtil;
+import com.babsnet.posapp.util.ProductPickerDialog;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
@@ -74,6 +79,9 @@ public class PurchaseController implements FocusablePage {
     private Button deleteButton;
 
     @FXML
+    public Button resetButton;
+
+    @FXML
     private VBox rootVBoxPurchase;
 
 
@@ -114,7 +122,7 @@ public class PurchaseController implements FocusablePage {
             updateButton.setDisable(newSelection == null);
             if (newSelection != null) {
                 barcodeField.setText(newSelection.getBarcode());
-                buyPriceField.setText(String.valueOf(newSelection.getBuyPrice()));
+                buyPriceField.setText(FormatUtil.toIntegerString(newSelection.getBuyPrice()));
                 quantityField.setText(String.valueOf(newSelection.getQuantity()));
             }
         });
@@ -123,10 +131,11 @@ public class PurchaseController implements FocusablePage {
             boolean hasSelection = newSelection != null;
             updateButton.setDisable(!hasSelection);
             deleteButton.setDisable(!hasSelection);
+            resetButton.setDisable(!hasSelection);
 
             if (hasSelection) {
                 barcodeField.setText(newSelection.getBarcode());
-                buyPriceField.setText(String.valueOf(newSelection.getBuyPrice()));
+                buyPriceField.setText(FormatUtil.toIntegerString(newSelection.getBuyPrice()));
                 quantityField.setText(String.valueOf(newSelection.getQuantity()));
             }
         });
@@ -335,6 +344,10 @@ public class PurchaseController implements FocusablePage {
             showShortcutInfo();
             event.consume();
         }
+        if (event.isControlDown() && event.getCode() == KeyCode.P) {
+            openProductSearch();
+            event.consume();
+        }
     }
 
     @FXML
@@ -357,6 +370,7 @@ public class PurchaseController implements FocusablePage {
             - Del        : Hapus produk (fokus di tabel)
             - Ctrl + L   : Reset form/input list baru
             - Ctrl + I   : Tampilkan info shortcut keyboard
+            - Ctrl + P   : Open product popup
             - Ctrl + Enter: Simpan purchase (fokus di tombol Save)
             """;
         TextArea area = new TextArea(info);
@@ -388,6 +402,13 @@ public class PurchaseController implements FocusablePage {
         quantityField.clear();
     }
 
+    @FXML
+    public void resetSelectedProduct(ActionEvent actionEvent) {
+        barcodeField.clear();
+        buyPriceField.clear();
+        quantityField.clear();
+    }
+
 
 
     @FXML
@@ -402,12 +423,10 @@ public class PurchaseController implements FocusablePage {
             selectedItem.setBuyPrice(buyPrice);
             selectedItem.setQuantity(quantity);
             selectedItem.setBarcode(barcodeField.getText());
+            selectedItem.setSubTotal(buyPrice * quantity);
 
             // Refresh TableView
             purchaseTable.refresh();
-
-            updateTotal();
-
             barcodeField.clear();
             buyPriceField.clear();
             quantityField.clear();
@@ -483,6 +502,15 @@ public class PurchaseController implements FocusablePage {
         }
 
         try {
+            Integer idPurchase = PurchaseDAO.getPurchaseIdByNumber(invoice);
+            if (idPurchase != null) {
+                MessageDialogUtil.showError("Number invoice sudah ada silahkan pakai nomor yang lain");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
             int purchaseId = PurchaseDAO.insertPurchase(invoice, purchaseDate, selectedSupplier.getId(), total, currentUser);
             PurchaseDAO.insertPurchaseDetails(purchaseId, purchaseItems);
 
@@ -518,4 +546,32 @@ public class PurchaseController implements FocusablePage {
     public void focusRootBox() {
         Platform.runLater(() -> rootVBoxPurchase.requestFocus());
     }
+
+    @FXML
+    private void openProductSearch() {
+        try {
+            var owner = purchaseTable.getScene() != null ? purchaseTable.getScene().getWindow() : null;
+            ProductPickerDialog.showAndPick(owner).ifPresent(prod -> {
+                ClipboardContent cc = new ClipboardContent();
+                cc.putString(prod.getBarcode() == null ? "" : prod.getBarcode());
+                Clipboard.getSystemClipboard().setContent(cc);
+
+                Alert info = new Alert(Alert.AlertType.INFORMATION);
+                info.setHeaderText("Produk terpilih");
+                info.setContentText(
+                        "Nama   : " + prod.getName() + "\n" +
+                                "Barcode: " + prod.getBarcode() + "\n" +
+                                "Harga Jual  : " + FormatUtil.toRupiahNoDecimal(prod.getPrice())
+                );
+                info.showAndWait();
+                barcodeField.setText(prod.getBarcode());
+                buyPriceField.setText(FormatUtil.toIntegerString(prod.getLastBuyPrice()));
+
+            });
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Gagal membuka popup produk: " + ex.getMessage()).showAndWait();
+        }
+    }
+
 }
