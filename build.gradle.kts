@@ -72,6 +72,7 @@ tasks.named("jlink") {
 }
 
 
+// ====== ./gradlew clean jlink jpackage =====
 jlink {
     imageZip.set(layout.buildDirectory.file("distributions/app-${javafx.platform.classifier}.zip"))
     options.set(listOf("--strip-debug", "--compress", "2", "--no-header-files", "--no-man-pages"))
